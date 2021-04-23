@@ -13,22 +13,26 @@
     // Public methods
     //
 
-    public static string ToPrettyString(this Exception e)
+    public static string ToPrettyString(this Exception e, bool types = true, bool stackTrace = true)
     {
       var builder = new StringBuilder();
-      builder.Append(e.GetType()).Append(": ").Append(e.Message);
-      if(e.StackTrace != null) {
+      if(types) builder.Append(e.GetType()).Append(": ");
+      builder.Append(e.Message);
+      if(e.StackTrace != null && stackTrace) {
         builder.AppendLine();
-        builder.Append(e.StackTrace.ForEachLine((b, line) => b.Append(line.TrimStart(' ', '\t'))));
+        builder.Append(e.StackTrace.ForEachLine((b, line) =>
+        {
+          // Remove source code file/line references - Too much info and too messy
+          var index = line.IndexOf(" in ");
+          if(index > 0) line = line.Substring(0, index);
+          b.Append(line.TrimStart(' ', '\t'));
+        }));
       }
       if(e.InnerException == null) return builder.ToString();
 
       builder.AppendLine();
-      builder.AppendLine("  >> Inner exception");
-      var inner = e.InnerException.ToPrettyString();
+      var inner = e.InnerException.ToPrettyString(types, stackTrace);
       builder.Append(inner.PrefixLines("  "));
-      builder.AppendLine();
-      builder.Append("  << Inner exception");
 
       return builder.ToString();
     }

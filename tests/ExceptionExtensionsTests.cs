@@ -2,6 +2,7 @@ namespace GinjaSoft.Text.Tests
 {
   using System;
   using Xunit;
+  using Xunit.Abstractions;
   using System.Diagnostics;
   using System.Runtime.CompilerServices;
   using System.Text.RegularExpressions;
@@ -9,6 +10,14 @@ namespace GinjaSoft.Text.Tests
 
   public class ExceptionExtensionsTests
   {
+    private readonly ITestOutputHelper _output;
+
+
+    public ExceptionExtensionsTests(ITestOutputHelper output)
+    {
+      _output = output;
+    }
+
     //
     // I use RegexOptions.IgnorePatternWhitespace below so that I can spread the patterns over multiple lines, and
     // the literal newlines in the code will be ignored.  However I still want to match on spaces in each line of the
@@ -19,16 +28,16 @@ namespace GinjaSoft.Text.Tests
     public void Basic()
     {
       var pattern = $@"
-^System.ArgumentException:[ ]exception[ ]message(\r|\r\n)
-at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.ThrowException()[^\n]*(\r|\r\n)
-at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.{GetCurrentMethodName()}()[^\n]*$";
+^System\.ArgumentException:[ ]exception[ ]message(\n|\r\n)
+at[ ]GinjaSoft\.Text\.Tests\.ExceptionExtensionsTests\.ThrowException\(\)[^\r\n]*(\n|\r\n)
+at[ ]GinjaSoft\.Text\.Tests\.ExceptionExtensionsTests\.{GetCurrentMethodName()}\(\)[^\r\n]*$";
 
       try {
         ThrowException();
       }
       catch(Exception e) {
         var output = e.ToPrettyString();
-        Console.WriteLine(output);
+        _output.WriteLine($"=={output}==");
         var match = Regex.Match(output, pattern, RegexOptions.IgnorePatternWhitespace);
         Assert.True(match.Success);
       }
@@ -38,17 +47,17 @@ at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.{GetCurrentMethodName()}()[^\
     public void DeeperStackTrace()
     {
       var pattern = $@"
-^System.ArgumentException:[ ]exception[ ]message(\r|\r\n)
-at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.ThrowException()[^\n]*(\r|\r\n)
-at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.ThrowExceptionWithDeeperStackTrace()[^\n]*(\r|\r\n)
-at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.{GetCurrentMethodName()}()[^\n]*$";
+^System\.ArgumentException:[ ]exception[ ]message(\n|\r\n)
+at[ ]GinjaSoft\.Text\.Tests\.ExceptionExtensionsTests\.ThrowException\(\)[^\r\n]*(\n|\r\n)
+at[ ]GinjaSoft\.Text\.Tests\.ExceptionExtensionsTests\.ThrowExceptionWithDeeperStackTrace\(\)[^\r\n]*(\n|\r\n)
+at[ ]GinjaSoft\.Text\.Tests\.ExceptionExtensionsTests\.{GetCurrentMethodName()}\(\)[^\r\n]*$";
 
       try {
         ThrowExceptionWithDeeperStackTrace();
       }
       catch(Exception e) {
         var output = e.ToPrettyString();
-        Console.WriteLine(output);
+        _output.WriteLine($"=={output}==");
         var match = Regex.Match(output, pattern, RegexOptions.IgnorePatternWhitespace);
         Assert.True(match.Success);
       }
@@ -58,21 +67,19 @@ at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.{GetCurrentMethodName()}()[^\
     public void InnerException()
     {
       var pattern = $@"
-^System.Exception:[ ]wrapper[ ]exception[ ]message(\r|\r\n)
-at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.ThrowExceptionWithInnerException()[^\n]*(\r|\r\n)
-at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.{GetCurrentMethodName()}()[^\n]*(\r|\r\n)
-[ ][ ]>>[ ]Inner[ ]exception(\r|\r\n)
-[ ][ ]System.ArgumentException:[ ]exception[ ]message(\r|\r\n)
-[ ][ ]at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.ThrowException()[^\n]*(\r|\r\n)
-[ ][ ]at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.ThrowExceptionWithInnerException()[^\n]*(\r|\r\n)
-[ ][ ]<<[ ]Inner[ ]exception$";
+^System\.Exception:[ ]wrapper[ ]exception[ ]message(\n|\r\n)
+at[ ]GinjaSoft\.Text\.Tests\.ExceptionExtensionsTests\.ThrowExceptionWithInnerException\(\)[^\r\n]*(\n|\r\n)
+at[ ]GinjaSoft\.Text\.Tests\.ExceptionExtensionsTests\.{GetCurrentMethodName()}\(\)[^\r\n]*(\n|\r\n)
+[ ][ ]System.ArgumentException:[ ]exception[ ]message(\n|\r\n)
+[ ][ ]at[ ]GinjaSoft\.Text\.Tests\.ExceptionExtensionsTests\.ThrowException\(\)[^\r\n]*(\n|\r\n)
+[ ][ ]at[ ]GinjaSoft\.Text\.Tests\.ExceptionExtensionsTests\.ThrowExceptionWithInnerException\(\)[^\r\n]*$";
 
       try {
         ThrowExceptionWithInnerException();
       }
       catch(Exception e) {
         var output = e.ToPrettyString();
-        Console.WriteLine(output);
+        _output.WriteLine($"=={output}==");
         var match = Regex.Match(output, pattern, RegexOptions.IgnorePatternWhitespace);
         Assert.True(match.Success);
       }
@@ -82,26 +89,22 @@ at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.{GetCurrentMethodName()}()[^\
     public void InnerInnerException()
     {
       var pattern = $@"
-^System.Exception:[ ]wrapper[ ]wrapper[ ]exception[ ]message(\r|\r\n)
-at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.ThrowExceptionWithInnerInnerException()[^\n]*(\r|\r\n)
-at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.{GetCurrentMethodName()}()[^\n]*(\r|\r\n)
-[ ][ ]>>[ ]Inner[ ]exception(\r|\r\n)
-[ ][ ]System.Exception:[ ]wrapper[ ]exception[ ]message(\r|\r\n)
-[ ][ ]at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.ThrowExceptionWithInnerException()[^\n]*(\r|\r\n)
-[ ][ ]at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.ThrowExceptionWithInnerInnerException()[^\n]*(\r|\r\n)
-[ ][ ][ ][ ]>>[ ]Inner[ ]exception(\r|\r\n)
-[ ][ ][ ][ ]System.ArgumentException:[ ]exception[ ]message(\r|\r\n)
-[ ][ ][ ][ ]at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.ThrowException()[^\n]*(\r|\r\n)
-[ ][ ][ ][ ]at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.ThrowExceptionWithInnerException()[^\n]*(\r|\r\n)
-[ ][ ][ ][ ]<<[ ]Inner[ ]exception(\r|\r\n)
-[ ][ ]<<[ ]Inner[ ]exception$";
+^System\.Exception:[ ]wrapper[ ]wrapper[ ]exception[ ]message(\n|\r\n)
+at[ ]GinjaSoft\.Text\.Tests\.ExceptionExtensionsTests\.ThrowExceptionWithInnerInnerException\(\)[^\r\n]*(\n|\r\n)
+at[ ]GinjaSoft\.Text\.Tests\.ExceptionExtensionsTests\.{GetCurrentMethodName()}\(\)[^\r\n]*(\n|\r\n)
+[ ][ ]System\.Exception:[ ]wrapper[ ]exception[ ]message(\n|\r\n)
+[ ][ ]at[ ]GinjaSoft\.Text\.Tests\.ExceptionExtensionsTests\.ThrowExceptionWithInnerException\(\)[^\r\n]*(\n|\r\n)
+[ ][ ]at[ ]GinjaSoft\.Text\.Tests\.ExceptionExtensionsTests\.ThrowExceptionWithInnerInnerException\(\)[^\r\n]*(\n|\r\n)
+[ ][ ][ ][ ]System\.ArgumentException:[ ]exception[ ]message(\n|\r\n)
+[ ][ ][ ][ ]at[ ]GinjaSoft\.Text\.Tests\.ExceptionExtensionsTests\.ThrowException\(\)[^\r\n]*(\n|\r\n)
+[ ][ ][ ][ ]at[ ]GinjaSoft\.Text\.Tests\.ExceptionExtensionsTests\.ThrowExceptionWithInnerException\(\)[^\r\n]*$";
 
       try {
         ThrowExceptionWithInnerInnerException();
       }
       catch(Exception e) {
         var output = e.ToPrettyString();
-        Console.WriteLine(output);
+        _output.WriteLine($"=={output}==");
         var match = Regex.Match(output, pattern, RegexOptions.IgnorePatternWhitespace);
         Assert.True(match.Success);
       }
@@ -110,10 +113,10 @@ at[ ]GinjaSoft.Text.Tests.ExceptionExtensionsTests.{GetCurrentMethodName()}()[^\
     [Fact]
     public void NewExceptionObject()
     {
-      const string pattern = @"^System.Exception:[ ]exception[ ]message$";
+      const string pattern = @"^System\.Exception:[ ]exception[ ]message$";
 
       var output = new Exception("exception message").ToPrettyString();
-      Console.WriteLine(output);
+      _output.WriteLine($"=={output}==");
       var match = Regex.Match(output, pattern, RegexOptions.IgnorePatternWhitespace);
       Assert.True(match.Success);
     }
